@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מעקב חשיפות</title>
+<meta name="description" content="תיעוד חשיפות ומניעת תגובה מנטלית">
+<meta name="theme-color" content="#2f5d62">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="מעקב חשיפות">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <button id="back" class="icon-btn" type="button" aria-label="חזרה" hidden>→</button>
+  <h1 id="title">מעקב חשיפות</h1>
+  <button id="menu-btn" class="icon-btn" type="button" aria-label="גיבוי וייצוא" aria-expanded="false">⋮</button>
+</header>
+
+<div id="menu" class="menu" hidden>
+  <button type="button" id="export-csv">ייצוא לטבלה (CSV)</button>
+  <button type="button" id="export-json">יצירת קובץ גיבוי</button>
+  <button type="button" id="import-json">שחזור מקובץ גיבוי</button>
+  <input type="file" id="import-file" accept=".json,application/json" hidden>
+</div>
+
+<main id="list-view">
+  <p id="empty" class="empty" hidden>עדיין אין רישומים.<br>לחיצה על ״רישום חדש״ תפתח את הטופס.</p>
+  <ul id="records" class="records"></ul>
+  <button id="add" class="fab" type="button">+ רישום חדש</button>
+</main>
+
+<form id="form-view" class="form" hidden novalidate>
+  <label class="field">
+    <span>תאריך ושעה</span>
+    <input type="datetime-local" name="when" required>
+  </label>
+  <label class="field">
+    <span>סיטואציה / חשיפה שבוצעה</span>
+    <textarea name="situation" rows="3" placeholder="למשל: נעילת דלת ויציאה" required></textarea>
+    <small id="situation-error" class="error" hidden>צריך למלא את הסיטואציה כדי לשמור</small>
+  </label>
+  <fieldset class="field">
+    <legend>רמת חרדה בשיא (0-10)</legend>
+    <div class="scale" data-scale="peak"></div>
+  </fieldset>
+  <label class="field">
+    <span>מה הייתה המחשבה הטורדנית / הדחף לשחזר?</span>
+    <textarea name="thought" rows="3"></textarea>
+  </label>
+  <fieldset class="field">
+    <legend>האם הצלחתי למנוע שחזור מנטלי?</legend>
+    <div class="segments" data-segments="prevented"></div>
+  </fieldset>
+  <label class="field">
+    <span>מה עזר לי לעצור את השחזור?</span>
+    <textarea name="helped" rows="3"></textarea>
+  </label>
+  <fieldset class="field">
+    <legend>רמת חרדה בסיום (0-10)</legend>
+    <div class="scale" data-scale="end"></div>
+  </fieldset>
+  <div class="actions">
+    <button type="submit" class="primary">שמירה</button>
+    <button type="button" id="delete" class="danger" hidden>מחיקת הרישום</button>
+  </div>
+</form>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
