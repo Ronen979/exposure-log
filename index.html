@@ -34,6 +34,13 @@
   <button id="add" class="fab" type="button">+ רישום חדש</button>
 </main>
 
+<section id="detail-view" class="detail" hidden>
+  <dl id="detail-fields"></dl>
+  <div class="actions">
+    <button type="button" id="edit" class="primary">עריכה</button>
+  </div>
+</section>
+
 <form id="form-view" class="form" hidden novalidate>
   <label class="field">
     <span>תאריך ושעה</span>
@@ -52,10 +59,10 @@
     <span>מה הייתה המחשבה הטורדנית / הדחף לשחזר?</span>
     <textarea name="thought" rows="3"></textarea>
   </label>
-  <fieldset class="field">
-    <legend>האם הצלחתי למנוע שחזור מנטלי?</legend>
-    <div class="segments" data-segments="prevented"></div>
-  </fieldset>
+  <label class="field">
+    <span>האם הצלחתי למנוע שחזור מנטלי?</span>
+    <textarea name="prevented" rows="3"></textarea>
+  </label>
   <label class="field">
     <span>מה עזר לי לעצור את השחזור?</span>
     <textarea name="helped" rows="3"></textarea>

@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'exposure-log-v1';
+const CACHE = 'exposure-log-v2';
 const FILES = [
   './',
   'index.html',
@@ -12,7 +12,9 @@ const FILES = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
+  // Bypass the HTTP cache, otherwise a new version can precache stale files.
+  const requests = FILES.map((file) => new Request(file, { cache: 'reload' }));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(requests)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {

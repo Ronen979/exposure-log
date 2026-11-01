@@ -1,11 +1,10 @@
 'use strict';
 
 const STORAGE_KEY = 'exposure-log.records.v1';
-const PREVENTED = ['מלא', 'חלקי', 'לא'];
 const $ = (id) => document.getElementById(id);
 
 const form = $('form-view');
-const pickers = { peak: null, end: null, prevented: null };
+const pickers = { peak: null, end: null };
 
 /* ---------- storage ---------- */
 
@@ -45,7 +44,7 @@ function normalize(raw) {
     situation,
     peak: level(raw.peak),
     thought: text(raw.thought),
-    prevented: PREVENTED.includes(raw.prevented) ? raw.prevented : null,
+    prevented: text(raw.prevented),
     helped: text(raw.helped),
     end: level(raw.end),
   };
@@ -82,7 +81,7 @@ function renderList() {
   for (const r of records) {
     const card = el('button', 'record');
     card.type = 'button';
-    card.addEventListener('click', () => { location.hash = `edit/${r.id}`; });
+    card.addEventListener('click', () => { location.hash = `view/${r.id}`; });
 
     const head = el('div', 'record-head');
     head.append(el('bdi', '', formatWhen(r.when)));
@@ -92,7 +91,6 @@ function renderList() {
     const meta = el('div', 'record-meta');
     if (r.peak !== null) meta.append(metaItem('שיא', r.peak));
     if (r.end !== null) meta.append(metaItem('סיום', r.end));
-    if (r.prevented) meta.append(metaItem('מניעת שחזור', r.prevented));
 
     card.append(head, el('p', 'record-situation', r.situation), meta);
     const li = el('li');
@@ -101,11 +99,31 @@ function renderList() {
   }
 }
 
+/* ---------- detail ---------- */
+
+function renderDetail(r) {
+  const fields = [
+    ['תאריך ושעה', formatWhen(r.when)],
+    ['סיטואציה / חשיפה שבוצעה', r.situation],
+    ['רמת חרדה בשיא', r.peak],
+    ['מה הייתה המחשבה הטורדנית / הדחף לשחזר?', r.thought],
+    ['האם הצלחתי למנוע שחזור מנטלי?', r.prevented],
+    ['מה עזר לי לעצור את השחזור?', r.helped],
+    ['רמת חרדה בסיום', r.end],
+  ];
+  const list = $('detail-fields');
+  list.replaceChildren();
+  for (const [label, value] of fields) {
+    const isEmpty = value === null || value === undefined || value === '';
+    list.append(el('dt', '', label), el('dd', isEmpty ? 'unfilled' : '', isEmpty ? 'לא מולא' : String(value)));
+  }
+}
+
 /* ---------- form ---------- */
 
 function setPicked(name, value) {
   pickers[name] = value;
-  const root = form.querySelector(`[data-scale="${name}"], [data-segments="${name}"]`);
+  const root = form.querySelector(`[data-scale="${name}"]`);
   for (const b of root.querySelectorAll('button')) {
     b.setAttribute('aria-pressed', String(b.dataset.value === String(value)));
   }
@@ -137,9 +155,10 @@ function fillForm(record) {
   form.elements.situation.value = record ? record.situation : '';
   form.elements.thought.value = record ? record.thought : '';
   form.elements.helped.value = record ? record.helped : '';
+  // Records saved before this became a text field can hold null here.
+  form.elements.prevented.value = (record && record.prevented) || '';
   setPicked('peak', record ? record.peak : null);
   setPicked('end', record ? record.end : null);
-  setPicked('prevented', record ? record.prevented : null);
   showSituationError(false);
   $('delete').hidden = !record;
 }
@@ -164,14 +183,14 @@ function submitForm(event) {
     situation,
     peak: pickers.peak,
     thought: form.elements.thought.value,
-    prevented: pickers.prevented,
+    prevented: form.elements.prevented.value,
     helped: form.elements.helped.value,
     end: pickers.end,
   });
   const records = loadRecords().filter((r) => r.id !== record.id);
   records.push(record);
   if (saveRecords(records)) {
-    location.hash = '';
+    location.hash = id ? `view/${id}` : '';
     toast('נשמר');
   }
 }
@@ -254,20 +273,30 @@ function currentEditId() {
   return match ? match[1] : null;
 }
 
+function currentViewId() {
+  const match = location.hash.match(/^#view\/(.+)$/);
+  return match ? match[1] : null;
+}
+
 function route() {
   const isNew = location.hash === '#new';
-  const editId = currentEditId();
-  const record = editId ? loadRecords().find((r) => r.id === editId) : null;
-  const showForm = isNew || Boolean(record);
+  const id = currentEditId() || currentViewId();
+  const record = id ? loadRecords().find((r) => r.id === id) : null;
+  const isEdit = Boolean(record && currentEditId());
+  const isView = Boolean(record && currentViewId());
+  const showForm = isNew || isEdit;
+  const isList = !showForm && !isView;
 
-  $('list-view').hidden = showForm;
+  $('list-view').hidden = !isList;
+  $('detail-view').hidden = !isView;
   form.hidden = !showForm;
-  $('back').hidden = !showForm;
-  $('menu-btn').hidden = showForm;
-  $('title').textContent = isNew ? 'רישום חדש' : record ? 'עריכת רישום' : 'מעקב חשיפות';
+  $('back').hidden = isList;
+  $('menu-btn').hidden = !isList;
+  $('title').textContent = isNew ? 'רישום חדש' : isEdit ? 'עריכת רישום' : isView ? 'סיכום רישום' : 'מעקב חשיפות';
   toggleMenu(false);
 
   if (showForm) fillForm(record);
+  else if (isView) renderDetail(record);
   else renderList();
   window.scrollTo(0, 0);
 }
@@ -291,12 +320,15 @@ function toast(message) {
 const levels = Array.from({ length: 11 }, (_, i) => i);
 buildPicker('peak', form.querySelector('[data-scale="peak"]'), levels, Number);
 buildPicker('end', form.querySelector('[data-scale="end"]'), levels, Number);
-buildPicker('prevented', form.querySelector('[data-segments="prevented"]'), PREVENTED, String);
 
 form.addEventListener('submit', submitForm);
 form.elements.situation.addEventListener('input', () => showSituationError(false));
 $('add').addEventListener('click', () => { location.hash = 'new'; });
-$('back').addEventListener('click', () => { location.hash = ''; });
+$('back').addEventListener('click', () => {
+  const editId = currentEditId();
+  location.hash = editId ? `view/${editId}` : '';
+});
+$('edit').addEventListener('click', () => { location.hash = `edit/${currentViewId()}`; });
 $('delete').addEventListener('click', deleteCurrent);
 
 $('menu-btn').addEventListener('click', (e) => {

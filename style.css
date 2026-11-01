@@ -82,7 +82,7 @@ button { cursor: pointer; }
 }
 .menu button + button { border-top: 1px solid var(--line); }
 
-main, .form {
+main, .form, .detail {
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
@@ -140,9 +140,13 @@ main, .form {
 .field .invalid { border-color: var(--danger); }
 .error { display: block; margin-top: 6px; color: var(--danger); font-size: 15px; }
 
+.detail dl { margin: 0 0 24px; }
+.detail dt { color: var(--muted); font-size: 15px; }
+.detail dd { margin: 2px 0 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.detail dd.unfilled { color: var(--muted); }
+
 .scale { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-.segments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.scale button, .segments button {
+.scale button {
   min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 10px;
